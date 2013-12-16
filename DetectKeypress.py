@@ -4,6 +4,7 @@ import ctypes
 import time
 import mousemacro
 import random
+from configobj import ConfigObj
 
 try:
     filename="C:/pythonCustomCode/PythonWinService/macroconfig.cfg"
