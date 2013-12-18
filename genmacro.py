@@ -8,7 +8,11 @@ def show(filename):
     
     config=ConfigObj(filename)
     return config
+
+def dictionary_to_list(dictionary):
+    pass
     
+
 def generate_macro(macro_dict,filename):
     """
     Writes out a macro file in .ini style. Takes a dictionary with this structure {triggers:{macroname:hotkey},macros:{macroname:[list of actions]}}
