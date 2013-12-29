@@ -16,6 +16,7 @@ class MACRO_EDITOR(QDialog):
         self.setMinimumSize(500,400)
         self.listWidget = QListWidget()
         self.combobox = QComboBox()
+        self.triggerbox=QComboBox()
         
         if self.macro_dictionary.get('triggers'):
             for key in self.macro_dictionary.get('triggers'):
@@ -27,6 +28,8 @@ class MACRO_EDITOR(QDialog):
             self.listWidget.addItems(macro_list.values())
             self.listWidget.setCurrentRow(0)
             
+        self.combobox.activated[str].connect(self.on_activated)
+            
         main_vertical_layout=QVBoxLayout()
         buttonLayout = QVBoxLayout()
         layout = QHBoxLayout()        
@@ -36,7 +39,7 @@ class MACRO_EDITOR(QDialog):
                            ("&Remove...", self.remove),
                            ("&Up", self.up),
                            ("&Down", self.down),
-                           ("&Sort", self.listWidget.sortItems),
+                           ("&Rename\nMacro...", self.rename_macro),
                            ("Close", self.accept)
                            ):
             button = QPushButton(text)
@@ -47,21 +50,62 @@ class MACRO_EDITOR(QDialog):
             self.connect(button, SIGNAL("clicked()"), slot)
             
 
+        self.list_view=QTreeView()
+        self.model=QStandardItemModel(self.list_view)
+        self.list_view.setModel(self.model)
+        self.root_node=self.model.invisibleRootItem()
+        self.append_items(self.macro_dictionary)
+        
+        
+        
+
+
+
         layout.addWidget(self.listWidget)
         layout.addLayout(buttonLayout)
         main_vertical_layout.addWidget(self.combobox)
         main_vertical_layout.addLayout(layout)
+        main_vertical_layout.addWidget(self.list_view)
         
         self.setLayout(main_vertical_layout)
         self.setWindowTitle("%s" % self.name)
+        
+    def append_items(self,dictionary):
+        """Takes a list of items and appends them to the model"""
+        for macro in dictionary:
+            qmacro=QStandardItem(macro)
+            self.root_node.appendRow(qmacro)
+            for item in dictionary[macro].values():
+                qitem=QStandardItem(item)
+                qmacro.appendRow(qitem)
+                
+    def rename_macro(self):
+        pass
 
-
+    def set_list(self):
+        current_macro=unicode(self.combobox.currentText())
+        macro_actions=self.get_current_list()
+        self.macro_dictionary[current_macro]=macro_actions
+        print self.macro_dictionary
+        
+    def on_activated(self):
+        current_macro=self.combobox.currentText()
+        macro_actions=self.macro_dictionary.get(unicode(current_macro))
+        self.listWidget.clear()
+        try:
+            self.listWidget.addItems(macro_actions.values())
+        except AttributeError:
+            self.listWidget.addItems(macro_actions)
+            
+        print current_macro
+    
     def add(self):
         row = self.listWidget.currentRow()
         title = "Add %s" % self.action
         string, ok = QInputDialog.getText(self, title, title)
         if ok and not string.isEmpty():
             self.listWidget.insertItem(row, string)
+            self.set_list()
 
     def duplicate(self):
         """Duplicates an item and adds it to the row below current"""
@@ -70,6 +114,7 @@ class MACRO_EDITOR(QDialog):
         item=self.listWidget.item(row)
         if item is not None:
             self.listWidget.insertItem(row,item.text())
+            self.set_list()
         
     def edit(self):
         row = self.listWidget.currentRow()
@@ -80,6 +125,7 @@ class MACRO_EDITOR(QDialog):
                                 QLineEdit.Normal, item.text())
             if ok and not string.isEmpty():
                 item.setText(string)
+                self.set_list()
 
     def remove(self):
         row = self.listWidget.currentRow()
@@ -93,6 +139,7 @@ class MACRO_EDITOR(QDialog):
         if reply == QMessageBox.Yes:
             item = self.listWidget.takeItem(row)
             del item
+            self.set_list()
 
     def up(self):
         row = self.listWidget.currentRow()
@@ -100,6 +147,7 @@ class MACRO_EDITOR(QDialog):
             item = self.listWidget.takeItem(row)
             self.listWidget.insertItem(row - 1, item)
             self.listWidget.setCurrentItem(item)
+            self.set_list()
 
     def down(self):
         row = self.listWidget.currentRow()
@@ -107,6 +155,7 @@ class MACRO_EDITOR(QDialog):
             item = self.listWidget.takeItem(row)
             self.listWidget.insertItem(row + 1, item)
             self.listWidget.setCurrentItem(item)
+            self.set_list()
 
     def reject(self):
         self.accept()
@@ -130,11 +179,6 @@ if __name__ == "__main__":
     filename="C:/pythonCustomCode/PythonWinService/macroconfig.cfg"
     fig=ConfigObj(filename,list_values=False)
     lightclaws=fig.get('LightClaws')
-    fruit = ["Banana", "Apple", "Elderberry", "Clementine", "Fig",
-             "Guava", "Mango", "Honeydew Melon", "Date", "Watermelon",
-             "Tangerine", "Ugli Fruit", "Juniperberry", "Kiwi",
-             "Lemon", "Nectarine", "Plum", "Raspberry", "Strawberry",
-             "Orange"]
     app = QApplication(sys.argv)
     form = MACRO_EDITOR(config_dict=fig)
     form.exec_()
