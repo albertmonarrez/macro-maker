@@ -18,6 +18,25 @@ class MACRO_EDITOR(QDialog):
         self.combobox = QComboBox()
         self.triggerbox=QComboBox()
         
+        self.combobox.activated[str].connect(self.on_activated)
+        self.populate_list()
+        
+        two_combo=QHBoxLayout()
+        two_combo.addWidget(self.combobox)
+        two_combo.addWidget(self.triggerbox)
+        list_and_buttons = QHBoxLayout()    
+        buttonLayout=self.add_buttons()
+        list_and_buttons.addWidget(self.listWidget)
+        list_and_buttons.addLayout(buttonLayout)
+
+        self.main_vertical_layout=self.make_layout([two_combo,
+                                                    list_and_buttons])
+        
+        self.setLayout(self.main_vertical_layout)
+        self.setWindowTitle("%s" % self.name)
+        
+    def populate_list(self):
+        
         if self.macro_dictionary.get('triggers'):
             for key in self.macro_dictionary.get('triggers'):
                 self.combobox.addItem(key)
@@ -26,13 +45,35 @@ class MACRO_EDITOR(QDialog):
         if self.macro_dictionary.get(unicode(ctext)):
             macro_list=self.macro_dictionary.get(unicode(ctext))
             self.listWidget.addItems(macro_list.values())
-            self.listWidget.setCurrentRow(0)
-            
-        self.combobox.activated[str].connect(self.on_activated)
-            
-        main_vertical_layout=QVBoxLayout()
+            self.listWidget.setCurrentRow(0)        
+        
+    def make_layout(self,layout_items,layoutType='vertical'):
+        """Creates the main body of the layout"""
+        
+        if layoutType=='vertical':
+            main_layout=QVBoxLayout()
+        else:
+            main_layout=QHBoxLayout()
+        for item in layout_items:
+            try:
+                main_layout.addWidget(item)
+            except TypeError:
+                main_layout.addLayout(item)
+        return main_layout
+        
+        
+    def append_items(self,dictionary):
+        """Takes a list of items and appends them to the model"""
+        for macro in dictionary:
+            qmacro=QStandardItem(macro)
+            self.root_node.appendRow(qmacro)
+            for item in dictionary[macro].values():
+                qitem=QStandardItem(item)
+                qmacro.appendRow(qitem)
+                
+    def add_buttons(self):
+        
         buttonLayout = QVBoxLayout()
-        layout = QHBoxLayout()        
         for text, slot in (("&Add...", self.add),
                            ("Duplicate",self.duplicate),
                            ("&Edit...", self.edit),
@@ -48,36 +89,8 @@ class MACRO_EDITOR(QDialog):
                 buttonLayout.addStretch()
             buttonLayout.addWidget(button)
             self.connect(button, SIGNAL("clicked()"), slot)
-            
 
-        self.list_view=QTreeView()
-        self.model=QStandardItemModel(self.list_view)
-        self.list_view.setModel(self.model)
-        self.root_node=self.model.invisibleRootItem()
-        self.append_items(self.macro_dictionary)
-        
-        
-        
-
-
-
-        layout.addWidget(self.listWidget)
-        layout.addLayout(buttonLayout)
-        main_vertical_layout.addWidget(self.combobox)
-        main_vertical_layout.addLayout(layout)
-        main_vertical_layout.addWidget(self.list_view)
-        
-        self.setLayout(main_vertical_layout)
-        self.setWindowTitle("%s" % self.name)
-        
-    def append_items(self,dictionary):
-        """Takes a list of items and appends them to the model"""
-        for macro in dictionary:
-            qmacro=QStandardItem(macro)
-            self.root_node.appendRow(qmacro)
-            for item in dictionary[macro].values():
-                qitem=QStandardItem(item)
-                qmacro.appendRow(qitem)
+        return buttonLayout  
                 
     def rename_macro(self):
         pass
@@ -96,9 +109,7 @@ class MACRO_EDITOR(QDialog):
             self.listWidget.addItems(macro_actions.values())
         except AttributeError:
             self.listWidget.addItems(macro_actions)
-            
-        print current_macro
-    
+                
     def add(self):
         row = self.listWidget.currentRow()
         title = "Add %s" % self.action

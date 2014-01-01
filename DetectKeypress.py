@@ -12,7 +12,7 @@ try:
 except Exception as inst:
     print inst
 
-def keypress_detection(keysToLookFor,abort):
+def keypress_detection(keysToLookFor,abort,pausekey):
     """
     Keypress detection. Fires a macro based on the keys it's looking for
     keysToLookFor are keys(triggers) this function looks for to fire a macro, the structure is this:
@@ -21,46 +21,47 @@ def keypress_detection(keysToLookFor,abort):
     
     Abort key is the key it looks for break out of the main keypress detection loop (ends the function)
     """
+    
     UpOrDownKeyState={}    
-    keyIsDown=[-127,-128]
-    pause=False    
+    down_not_toggled=-127
+    down_and_toggled=-128
+    up_not_toggled=0
+    up_and_toggled=1
+    
+    down_state=[down_not_toggled,down_and_toggled]
+    up_state=[up_not_toggled,up_and_toggled]
+    not_toggled=[up_not_toggled,down_not_toggled]
+    toggled_on=[up_and_toggled,down_and_toggled]
+    
     abortkey=''
     
-    #Get Initial state of pause key is it 0 or 1 if one hit the pause key to make it zero
-    pausekeyinitial=win32api.GetKeyState(win32con.VK_F3)
-    if pausekeyinitial==0:
-        pausekeyinitial=pausekeyinitial
-    else:
-        win32api.keybd_event(win32con.VK_F3,0,0,0)
-        win32api.keybd_event(win32con.VK_F3,0,win32con.KEYEVENTF_KEYUP,0)        
-    
-    triggerMacroKeys=keysToLookFor
-    for item in triggerMacroKeys:
+    #press pause key to get the toggle state is it 0 or 1 if one hit the pause key to reset to zero
+    win32api.keybd_event(pausekey,0,0,0)
+    if win32api.GetKeyState(pausekey)==down_and_toggled:
+        win32api.keybd_event(pausekey,0,win32con.KEYEVENTF_KEYUP,0)        
+
+    for item in keysToLookFor:
         UpOrDownKeyState[item]=True
+        keysToLookFor[item]=eval(keysToLookFor.get(item))
                 
-    while abortkey not in keyIsDown: #-127,-128 is returned by GetKeyState when the key passed to it is down
-        for macro in triggerMacroKeys:                
+    while abortkey not in down_state: #-127,-128 is returned by GetKeyState when the key passed to it is down
+        for macro in keysToLookFor:                
             abortkey=win32api.GetKeyState(abort)#gets the state of the abort key returns either 0,1,-127,-128
-            keyboardkey=triggerMacroKeys.get(macro)#returns a string from the config file with python representation of a key ex.win32con.VK_ESCAPE
-            keyboardkey=eval(keyboardkey)#evaluates the python string
-            keypressed=win32api.GetKeyState(keyboardkey)#gets the state of the look for key returns either 0,1,-127,-128
-            pausekey=win32api.GetKeyState(win32con.VK_F3)
+            keypressed=win32api.GetKeyState(keysToLookFor[macro])#gets the state of the look for key returns either 0,1,-127,-128
             
-            if pausekey==0:
-                pause=False
-            elif pausekey==1:
-                pause=True
-            
+            pause_state=win32api.GetKeyState(pausekey)
+           # print pause_state
+            if pause_state in not_toggled:pause=False
+            elif pause_state in toggled_on:pause=True            
+
             playstate=UpOrDownKeyState.get(macro)
             
-            if keypressed in keyIsDown and playstate==True and pause==False: #keypressed returns -127 or -128 if key is being pressed
-                #print keypressed,'Button is down.'
+            if keypressed in down_state and playstate==True and pause==False: #keypressed returns -127(down) or -128(down and toggled on) if key is being pressed
                 play_macro(macro)
-                UpOrDownKeyState[macro]=False #Only fire macro once while the key is being held down
-            elif keypressed==0 or keypressed==1: #toggle state
+                UpOrDownKeyState[macro]=False #Only fire macro once while the key is being held down, Don't continually fire after done if key is being held down
+            elif keypressed in up_state: 
                 UpOrDownKeyState[macro]=True
-                #print keypressed
-            else: print triggerMacroKeys.get(macro),'Key is being held down'
+            elif keypressed in down_state: print keysToLookFor[macro],'Key is being held down'
         time.sleep(.02)
     print 'Exiting'
 
@@ -78,7 +79,7 @@ def play_macro(macroname):
     
 def main():
     triggerMacroKeys=macroconfig['triggers']
-    keypress_detection(triggerMacroKeys,win32con.VK_F12) #look for h key then fire macro exit loop if escape key    
+    keypress_detection(triggerMacroKeys,win32con.VK_F12,win32con.VK_F3) #look for h key then fire macro exit loop if escape key    
     
 if __name__=='__main__':
     main()
