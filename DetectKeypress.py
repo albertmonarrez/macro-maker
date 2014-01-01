@@ -11,7 +11,17 @@ try:
     macroconfig=config=ConfigObj(filename,list_values=False)
 except Exception as inst:
     print inst
-
+    
+def get_key_state(*args):
+    """Runs the win32apiGetKeyState on the passed in args and returns them. """
+    
+    values=[]
+    for arg in args:
+        return_value=win32api.GetKeyState(arg)
+        values.append(return_value)
+    
+    return values
+            
 def keypress_detection(keysToLookFor,abort,pausekey):
     """
     Keypress detection. Fires a macro based on the keys it's looking for
@@ -46,11 +56,7 @@ def keypress_detection(keysToLookFor,abort,pausekey):
                 
     while abortkey not in down_state: #-127,-128 is returned by GetKeyState when the key passed to it is down
         for macro in keysToLookFor:                
-            abortkey=win32api.GetKeyState(abort)#gets the state of the abort key returns either 0,1,-127,-128
-            keypressed=win32api.GetKeyState(keysToLookFor[macro])#gets the state of the look for key returns either 0,1,-127,-128
-            
-            pause_state=win32api.GetKeyState(pausekey)
-           # print pause_state
+            abortkey,keypressed,pause_state=get_key_state(abort,keysToLookFor[macro],pausekey)
             if pause_state in not_toggled:pause=False
             elif pause_state in toggled_on:pause=True            
 
