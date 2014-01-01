@@ -7,7 +7,7 @@ import random
 from configobj import ConfigObj
 
 try:
-    filename="C:/pythonCustomCode/PythonWinService/macroconfig.cfg"
+    filename="C:/pythonCustomCode/PythonWinService/gentest.cfg"
     macroconfig=config=ConfigObj(filename,list_values=False)
 except Exception as inst:
     print inst
@@ -21,6 +21,13 @@ def get_key_state(*args):
         values.append(return_value)
     
     return values
+
+def get_triggers(dictionary):
+    trigger_keys={}
+    for macro in dictionary:
+        trigger_keys[macro]=dictionary[macro].get('trigger')
+        
+    return trigger_keys
             
 def keypress_detection(keysToLookFor,abort,pausekey):
     """
@@ -76,7 +83,7 @@ def play_macro(macroname):
     Plays a Macro ie. a sequence of keystrokes and mouse clicks
     """
     
-    macro=macroconfig[macroname]
+    macro=macroconfig[macroname]['actions']
     print 'Starting:',macroname,'#############################################'
     for actionstring in macro:
         print 'Executing:',actionstring,macro[actionstring]
@@ -84,7 +91,7 @@ def play_macro(macroname):
         eval(action)
     
 def main():
-    triggerMacroKeys=macroconfig['triggers']
+    triggerMacroKeys=get_triggers(macroconfig)
     keypress_detection(triggerMacroKeys,win32con.VK_F12,win32con.VK_F3) #look for h key then fire macro exit loop if escape key    
     
 if __name__=='__main__':

@@ -1,19 +1,20 @@
 import sys
+import os
+import genmacro
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from configobj import ConfigObj
-
-
 
 class MACRO_EDITOR(QDialog):
 
     def __init__(self, name='Macro Editor', config_dict={}, parent=None):
         super(MACRO_EDITOR, self).__init__(parent)
-
+        
+        self.savepath=os.path.expanduser('~')+'/macroTest.cfg'
         self.name = name
-        self.action='action'
+        self.action='action                                                                                                       '#lazy hack to resize dialog boxes until I do it properly
         self.macro_dictionary=config_dict
-        self.setMinimumSize(500,400)
+        self.setMinimumSize(550,550)
         self.listWidget = QListWidget()
         self.combobox = QComboBox()
         self.triggerbox=QComboBox()
@@ -37,15 +38,17 @@ class MACRO_EDITOR(QDialog):
         
     def populate_list(self):
         
-        if self.macro_dictionary.get('triggers'):
-            for key in self.macro_dictionary.get('triggers'):
-                self.combobox.addItem(key)
+        for macro in self.macro_dictionary:
+            self.combobox.addItem(macro)
+            self.triggerbox.addItem(self.macro_dictionary[macro]['trigger'])
 
         ctext=self.combobox.currentText()
         if self.macro_dictionary.get(unicode(ctext)):
             macro_list=self.macro_dictionary.get(unicode(ctext))
-            self.listWidget.addItems(macro_list.values())
+            self.listWidget.addItems(macro_list['actions'].values())
             self.listWidget.setCurrentRow(0)        
+        
+        self.macro_dictionary=genmacro.dictionary_to_list(self.macro_dictionary)
         
     def make_layout(self,layout_items,layoutType='vertical'):
         """Creates the main body of the layout"""
@@ -60,16 +63,6 @@ class MACRO_EDITOR(QDialog):
             except TypeError:
                 main_layout.addLayout(item)
         return main_layout
-        
-        
-    def append_items(self,dictionary):
-        """Takes a list of items and appends them to the model"""
-        for macro in dictionary:
-            qmacro=QStandardItem(macro)
-            self.root_node.appendRow(qmacro)
-            for item in dictionary[macro].values():
-                qitem=QStandardItem(item)
-                qmacro.appendRow(qitem)
                 
     def add_buttons(self):
         
@@ -81,11 +74,11 @@ class MACRO_EDITOR(QDialog):
                            ("&Up", self.up),
                            ("&Down", self.down),
                            ("&Rename\nMacro...", self.rename_macro),
-                           ("Close", self.accept)
+                           ("Save As", self.file_dialog)
                            ):
             button = QPushButton(text)
             button.setFocusPolicy(Qt.NoFocus)
-            if text == "Close":
+            if text == "Save As":
                 buttonLayout.addStretch()
             buttonLayout.addWidget(button)
             self.connect(button, SIGNAL("clicked()"), slot)
@@ -96,21 +89,32 @@ class MACRO_EDITOR(QDialog):
         pass
 
     def set_list(self):
+        """Grabs the current macro name from the combobox and updates macro_dictionary action list to what's displayed in list widget"""
+        
         current_macro=unicode(self.combobox.currentText())
         macro_actions=self.get_current_list()
-        self.macro_dictionary[current_macro]=macro_actions
-        print self.macro_dictionary
+        self.macro_dictionary[current_macro]['actions']=macro_actions
+        #self.triggerbox.setCurrentIndex
         
     def on_activated(self):
+        """
+        Upon changing the selection of a macro in the first combobox the list widget is cleared and new items 
+        are displayed to reflect the current macro selection
+        """
+        
         current_macro=self.combobox.currentText()
         macro_actions=self.macro_dictionary.get(unicode(current_macro))
         self.listWidget.clear()
         try:
-            self.listWidget.addItems(macro_actions.values())
+            macro_actions.get('actions').values()
         except AttributeError:
-            self.listWidget.addItems(macro_actions)
-                
+            self.listWidget.addItems(macro_actions['actions'])
+        else:
+            self.listWidget.addItems(macro_actions['actions'].values())
+            
     def add(self):
+        """Adds a new item to the list widget"""
+        
         row = self.listWidget.currentRow()
         title = "Add %s" % self.action
         string, ok = QInputDialog.getText(self, title, title)
@@ -119,7 +123,7 @@ class MACRO_EDITOR(QDialog):
             self.set_list()
 
     def duplicate(self):
-        """Duplicates an item and adds it to the row below current"""
+        """Duplicates selected item and adds it to the row below current"""
         
         row=self.listWidget.currentRow()
         item=self.listWidget.item(row)
@@ -128,6 +132,8 @@ class MACRO_EDITOR(QDialog):
             self.set_list()
         
     def edit(self):
+        """Pops up a dialog box with text of the currently selected item in the list widget and lets you edit it"""
+        
         row = self.listWidget.currentRow()
         item = self.listWidget.item(row)
         if item is not None:
@@ -139,6 +145,8 @@ class MACRO_EDITOR(QDialog):
                 self.set_list()
 
     def remove(self):
+        """Removes currently selected entry"""
+        
         row = self.listWidget.currentRow()
         item = self.listWidget.item(row)
         if item is None:
@@ -153,6 +161,8 @@ class MACRO_EDITOR(QDialog):
             self.set_list()
 
     def up(self):
+        """Moves currently selected item up 1"""
+        
         row = self.listWidget.currentRow()
         if row >= 1:
             item = self.listWidget.takeItem(row)
@@ -161,6 +171,8 @@ class MACRO_EDITOR(QDialog):
             self.set_list()
 
     def down(self):
+        """Moves currently selected item down 1"""
+        
         row = self.listWidget.currentRow()
         if row < self.listWidget.count() - 1:
             item = self.listWidget.takeItem(row)
@@ -179,17 +191,28 @@ class MACRO_EDITOR(QDialog):
         QDialog.accept(self)
     
     def get_current_list(self):
+        """Runs a loop on the listwidget to get all the items displayed in it and returns them."""
+        
         items = []
         for index in xrange(self.listWidget.count()):
             items.append('%s'%self.listWidget.item(index).text())
         
         return items
-
+    
+    def file_dialog(self):
+        """
+        Opens a File dialog and saves a file
+        """
+        
+        fileName = QFileDialog.getSaveFileName(parent=self,caption='Choose location to save csv',directory=self.savepath,filter='cfg files (*.cfg)')
+        if fileName:
+            self.savepath=fileName            
+            genmacro.generate_macro(self.macro_dictionary,fileName)
+        
 
 if __name__ == "__main__":
-    filename="C:/pythonCustomCode/PythonWinService/macroconfig.cfg"
+    filename="C:/pythonCustomCode/PythonWinService/gentest.cfg"
     fig=ConfigObj(filename,list_values=False)
-    lightclaws=fig.get('LightClaws')
     app = QApplication(sys.argv)
     form = MACRO_EDITOR(config_dict=fig)
     form.exec_()
