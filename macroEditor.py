@@ -86,7 +86,16 @@ class MACRO_EDITOR(QDialog):
         return buttonLayout  
                 
     def rename_macro(self):
-        pass
+        macro_name=unicode(self.combobox.currentText())
+        index=self.combobox.currentIndex()
+        
+        title = "Rename Macro"
+        string, ok = QInputDialog.getText(self, title, title,
+                            QLineEdit.Normal, macro_name)
+        if ok and not string.isEmpty():
+            self.combobox.setItemText(index,string)
+            s=unicode(string)
+            self.macro_dictionary[s]=self.macro_dictionary.pop(macro_name)
 
     def set_list(self):
         """Grabs the current macro name from the combobox and updates macro_dictionary action list to what's displayed in list widget"""
@@ -94,7 +103,7 @@ class MACRO_EDITOR(QDialog):
         current_macro=unicode(self.combobox.currentText())
         macro_actions=self.get_current_list()
         self.macro_dictionary[current_macro]['actions']=macro_actions
-        #self.triggerbox.setCurrentIndex
+        
         
     def on_activated(self):
         """
@@ -102,9 +111,14 @@ class MACRO_EDITOR(QDialog):
         are displayed to reflect the current macro selection
         """
         
-        current_macro=self.combobox.currentText()
-        macro_actions=self.macro_dictionary.get(unicode(current_macro))
+        current_macro=unicode(self.combobox.currentText())
+        macro_actions=self.macro_dictionary.get(current_macro)
         self.listWidget.clear()
+        
+        trigger=self.macro_dictionary[current_macro]['trigger']
+        index=self.triggerbox.findText(trigger)
+        self.triggerbox.setCurrentIndex(index)  
+        
         try:
             macro_actions.get('actions').values()
         except AttributeError:
