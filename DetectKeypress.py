@@ -7,7 +7,7 @@ import random
 from configobj import ConfigObj
 
 try:
-    filename="C:/pythonCustomCode/PythonWinService/gentest.cfg"
+    filename="macroconfig.cfg"
     macroconfig=config=ConfigObj(filename,list_values=False)
 except Exception as inst:
     print inst
@@ -33,8 +33,8 @@ def keypress_detection(keysToLookFor,abort,pausekey):
     """
     Keypress detection. Fires a macro based on the keys it's looking for
     keysToLookFor are keys(triggers) this function looks for to fire a macro, the structure is this:
-    keysToLookFor is a dictionary with a macroname key to look for pair. {'Macro Name':'scancode key','AttackMacro','ord('H')'}
-    'scancode key' should be ord(some letter) or a hex or number value representing a keyboard button or mouse button
+    keysToLookFor is a dictionary with a macroname key to look for pair. {'Macro Name':'virtual key','AttackMacro','ord('H')'}
+    'virtual key' is a  value representing a keyboard button or mouse button
     
     Abort key is the key it looks for break out of the main keypress detection loop (ends the function)
     """

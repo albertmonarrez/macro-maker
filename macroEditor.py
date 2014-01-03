@@ -10,7 +10,7 @@ class MACRO_EDITOR(QDialog):
     def __init__(self, name='Macro Editor', config_dict={}, parent=None):
         super(MACRO_EDITOR, self).__init__(parent)
         
-        self.savepath=os.path.expanduser('~')+'/macroTest.cfg'
+        self.savepath="C:/pythonCustomCode/PythonWinService/macroconfig1.cfg"
         self.name = name
         self.action='action                                                                                                       '#lazy hack to resize dialog boxes until I do it properly
         self.macro_dictionary=config_dict
@@ -225,7 +225,7 @@ class MACRO_EDITOR(QDialog):
         
 
 if __name__ == "__main__":
-    filename="C:/pythonCustomCode/PythonWinService/gentest.cfg"
+    filename="macroconfig.cfg"
     fig=ConfigObj(filename,list_values=False)
     app = QApplication(sys.argv)
     form = MACRO_EDITOR(config_dict=fig)

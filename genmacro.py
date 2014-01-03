@@ -1,5 +1,4 @@
 import time
-import mousemacro
 from itertools import *
 from configobj import ConfigObj
 
@@ -41,7 +40,7 @@ def generate_macro(macro_dict,filename):
     
 def main():
     print 'Main function'
-    f="C:/pythonCustomCode/PythonWinService/macroconfig.cfg"
+    f="macroconfig.cfg"
     s=show(f)
 
 

@@ -84,17 +84,19 @@ def get_window_by_name(windowTitle):
     
     return x,y
     
-def get_windows_with_text(Text,LowerCaseEverything=True):
+def get_windows_with_text(Text,ignore_case=True):
     windowNameList=[]
     all_windows=enum_windows()#returns a bunch of thread numbers in a list
     for item in all_windows:
         windowtext=win32gui.GetWindowText(item)
         if windowtext !='':#Don't print out empty strings    
-            if LowerCaseEverything==True:
-                windowtext=windowtext.lower()
+            if ignore_case==True:
                 Text=Text.lower()
-                if Text in windowtext:
+                if Text in windowtext.lower():
                     windowNameList.append(windowtext)
+            elif Text in windowtext:
+                    windowNameList.append(windowtext)
+                    
     return windowNameList
 
 

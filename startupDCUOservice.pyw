@@ -3,7 +3,7 @@ import time
 import subprocess
 import DetectKeypress
 import win32api
-import EnumerateWindows
+import WinController.EnumerateWindows as EnumerateWindows
 
 def SvcDoRun():
     KeyPressInstance=False
