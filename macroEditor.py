@@ -21,6 +21,14 @@ class MACRO_EDITOR(QDialog):
         
         self.combobox.activated[str].connect(self.on_activated)
         self.populate_list()
+        self.listWidget.doubleClicked.connect(self.edit)
+        
+        #shorcuts
+        save_as=QShortcut(QKeySequence("Ctrl+Shift+S"),self,self.file_dialog)
+        duplicate=QShortcut(QKeySequence("Ctrl+D"),self,self.duplicate)
+        delete=QShortcut(QKeySequence("Del"),self,self.remove)
+        up=QShortcut(QKeySequence("Cntrl+Up"),self,self.up)
+        down=QShortcut(QKeySequence("Cntrl+Down"),self,self.down)
         
         two_combo=QHBoxLayout()
         two_combo.addWidget(self.combobox)
