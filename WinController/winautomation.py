@@ -1,5 +1,7 @@
 import pywinauto
 import EnumerateWindows
+from pywinauto.timings import Timings
+Timings.Fast()
 
 
 def connect_to_window(window_name,ignore_case=True):

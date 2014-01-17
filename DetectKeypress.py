@@ -88,7 +88,7 @@ def play_macro(macroname):
     for actionstring in macro:
         print 'Executing:',actionstring,macro[actionstring]
         action=macro.get(actionstring)
-        eval(action)
+        exec(action)
     
 def main():
     triggerMacroKeys=get_triggers(macroconfig)
