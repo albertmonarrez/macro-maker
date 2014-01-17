@@ -96,3 +96,5 @@ def main():
     
 if __name__=='__main__':
     main()
+
+#[key for key in keypressed if key in down_state]==keypressed
