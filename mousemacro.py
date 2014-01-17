@@ -17,7 +17,6 @@ getpos() -- returns mouse x/y coordinates (in pixels)
 slide(x,y) -- slides mouse to x/y coodinates (in pixels)
               also supports optional speed='slow', speed='fast'
 """
-
 from ctypes import*
 from ctypes.wintypes import *
 from time import sleep
@@ -167,6 +166,4 @@ def middlerelease():
     windll.user32.mouse_event(MIDDLEUP,0,0,0,0)
 
 if __name__ == '__main__':
-    pass
-    while 1:
-        move(10,1)
+    move(10,1)

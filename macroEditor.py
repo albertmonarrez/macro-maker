@@ -4,20 +4,23 @@ import genmacro
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from configobj import ConfigObj
+import keyboard as k
 
 class MACRO_EDITOR(QDialog):
 
     def __init__(self, name='Macro Editor', config_dict={}, parent=None):
         super(MACRO_EDITOR, self).__init__(parent)
         
-        self.savepath="C:/pythonCustomCode/PythonWinService/macroconfig1.cfg"
+        self.savepath="macroconfig.cfg"
         self.name = name
-        self.action='action                                                                                                       '#lazy hack to resize dialog boxes until I do it properly
+        self.action='action'+' '*130#lazy hack to resize dialog boxes until I do it properly
         self.macro_dictionary=config_dict
         self.setMinimumSize(550,550)
         self.listWidget = QListWidget()
         self.combobox = QComboBox()
         self.triggerbox=QComboBox()
+        self.triggerbox2=QComboBox()
+        self.triggerbox3=QComboBox()
         
         self.combobox.activated[str].connect(self.on_activated)
         self.populate_list()
@@ -31,8 +34,9 @@ class MACRO_EDITOR(QDialog):
         down=QShortcut(QKeySequence("Cntrl+Down"),self,self.down)
         
         two_combo=QHBoxLayout()
-        two_combo.addWidget(self.combobox)
+        two_combo.addWidget(self.combobox,1)
         two_combo.addWidget(self.triggerbox)
+        two_combo.addWidget(self.triggerbox2)
         list_and_buttons = QHBoxLayout()    
         buttonLayout=self.add_buttons()
         list_and_buttons.addWidget(self.listWidget)
@@ -45,6 +49,8 @@ class MACRO_EDITOR(QDialog):
         self.setWindowTitle("%s" % self.name)
         
     def populate_list(self):
+        self.triggerbox.addItems(k.CODES.keys())
+        self.triggerbox2.addItems(k.CODES.keys())
         
         for macro in self.macro_dictionary:
             self.combobox.addItem(macro)
