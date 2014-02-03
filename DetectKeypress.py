@@ -2,8 +2,9 @@ import win32api
 import win32con
 import ctypes
 import time
-import mousemacro
-import random
+import mouse
+import keyboard as k
+from keyboard import codes as c
 from configobj import ConfigObj
 
 try:
@@ -51,6 +52,7 @@ def keypress_detection(keysToLookFor,abort,pausekey):
     toggled_on=[up_and_toggled,down_and_toggled]
     
     abortkey=''
+    repeat=True
     
     #press pause key to get the toggle state is it 0 or 1 if one hit the pause key to reset to zero
     win32api.keybd_event(pausekey,0,0,0)
@@ -71,7 +73,8 @@ def keypress_detection(keysToLookFor,abort,pausekey):
             
             if keypressed in down_state and playstate==True and pause==False: #keypressed returns -127(down) or -128(down and toggled on) if key is being pressed
                 play_macro(macro)
-                UpOrDownKeyState[macro]=False #Only fire macro once while the key is being held down, Don't continually fire after done if key is being held down
+                if repeat==False:
+                    UpOrDownKeyState[macro]=False #Only fire macro once while the key is being held down, Don't continually fire after done if key is being held down
             elif keypressed in up_state: 
                 UpOrDownKeyState[macro]=True
             elif keypressed in down_state: print keysToLookFor[macro],'Key is being held down'

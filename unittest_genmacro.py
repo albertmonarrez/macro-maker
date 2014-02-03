@@ -2,7 +2,7 @@ import genmacro
 import unittest
 import os
 import time
-import mousemacro
+import mouse
 from configobj import ConfigObj
 from unittest import main
 
@@ -19,16 +19,16 @@ class TEST_UNIT_GENMACRO(unittest.TestCase):
         
         macro_dict={'LightClaws':{'trigger':'win32con.VK_XBUTTON1',
                                   'actions':['time.sleep(.45)',
-                                             'mousemacro.hold()',
+                                             'mouse.hold()',
                                              'time.sleep(.4)',
                                              'win32api.keybd_event(ord(\'2\'), ord(\'2\'), 0, 0)',
                                              'win32api.keybd_event(ord(\'2\'), ord(\'2\'), win32con.KEYEVENTF_KEYUP, 0)', 
                                              'time.sleep(.2)',
-                                             'mousemacro.release()', 
+                                             'mouse.release()', 
                                              'time.sleep(.3)', 
-                                             'mousemacro.click()', 
+                                             'mouse.click()', 
                                              'time.sleep(.2)', 
-                                             'mousemacro.click()', 
+                                             'mouse.click()', 
                                              'time.sleep(.07)']}}
                     
         genmacro.generate_macro(macro_dict,path)

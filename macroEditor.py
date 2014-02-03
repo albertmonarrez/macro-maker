@@ -6,12 +6,14 @@ from PyQt4.QtGui import *
 from configobj import ConfigObj
 import keyboard as k
 
-class MACRO_EDITOR(QDialog):
+class MACRO_EDITOR(QMainWindow):
 
-    def __init__(self, name='Macro Editor', config_dict={}, parent=None):
+    def __init__(self, name='Macro Editor', config_dict={}, parent=None,file_name=None):
         super(MACRO_EDITOR, self).__init__(parent)
         
-        self.savepath="macroconfig.cfg"
+        self.main_widget=QWidget(self)#widget for holding my layout
+        
+        self.savepath=file_name
         self.name = name
         self.action='action'+' '*130#lazy hack to resize dialog boxes until I do it properly
         self.macro_dictionary=config_dict
@@ -21,6 +23,7 @@ class MACRO_EDITOR(QDialog):
         self.triggerbox=QComboBox()
         self.triggerbox2=QComboBox()
         self.triggerbox3=QComboBox()
+        self.statusBar()
         
         self.combobox.activated[str].connect(self.on_activated)
         self.populate_list()
@@ -28,6 +31,7 @@ class MACRO_EDITOR(QDialog):
         
         #shorcuts
         save_as=QShortcut(QKeySequence("Ctrl+Shift+S"),self,self.file_dialog)
+        save=QShortcut(QKeySequence("Ctrl+S"),self,self.save)
         duplicate=QShortcut(QKeySequence("Ctrl+D"),self,self.duplicate)
         delete=QShortcut(QKeySequence("Del"),self,self.remove)
         up=QShortcut(QKeySequence("Cntrl+Up"),self,self.up)
@@ -37,6 +41,7 @@ class MACRO_EDITOR(QDialog):
         two_combo.addWidget(self.combobox,1)
         two_combo.addWidget(self.triggerbox)
         two_combo.addWidget(self.triggerbox2)
+        two_combo.addWidget(self.triggerbox3)
         list_and_buttons = QHBoxLayout()    
         buttonLayout=self.add_buttons()
         list_and_buttons.addWidget(self.listWidget)
@@ -45,12 +50,13 @@ class MACRO_EDITOR(QDialog):
         self.main_vertical_layout=self.make_layout([two_combo,
                                                     list_and_buttons])
         
-        self.setLayout(self.main_vertical_layout)
+        self.main_widget.setLayout(self.main_vertical_layout)
+        self.setCentralWidget(self.main_widget)
         self.setWindowTitle("%s" % self.name)
         
     def populate_list(self):
-        self.triggerbox.addItems(k.CODES.keys())
-        self.triggerbox2.addItems(k.CODES.keys())
+        self.triggerbox.addItems(k.codes.keys())
+        self.triggerbox2.addItems(k.codes.keys())
         
         for macro in self.macro_dictionary:
             self.combobox.addItem(macro)
@@ -84,11 +90,12 @@ class MACRO_EDITOR(QDialog):
         for text, slot in (("&Add...", self.add),
                            ("Duplicate",self.duplicate),
                            ("&Edit...", self.edit),
-                           ("&Remove...", self.remove),
-                           ("&Up", self.up),
-                           ("&Down", self.down),
+                           ("Remove...", self.remove),
+                           ("Up", self.up),
+                           ("Down", self.down),
                            ("&Rename\nMacro...", self.rename_macro),
-                           ("Save As", self.file_dialog)
+                           ("Save As", self.file_dialog),
+                           ("Save",self.save)                           
                            ):
             button = QPushButton(text)
             button.setFocusPolicy(Qt.NoFocus)
@@ -227,6 +234,11 @@ class MACRO_EDITOR(QDialog):
         
         return items
     
+    def save(self,filename=None):
+        if filename==None:filename=self.savepath
+        genmacro.generate_macro(self.macro_dictionary,filename)
+        self.statusBar().showMessage('Saved file: %s'%filename,3000)
+
     def file_dialog(self):
         """
         Opens a File dialog and saves a file
@@ -235,13 +247,14 @@ class MACRO_EDITOR(QDialog):
         fileName = QFileDialog.getSaveFileName(parent=self,caption='Choose location to save csv',directory=self.savepath,filter='cfg files (*.cfg)')
         if fileName:
             self.savepath=fileName            
-            genmacro.generate_macro(self.macro_dictionary,fileName)
+            self.save(fileName)
         
 
 if __name__ == "__main__":
     filename="macroconfig.cfg"
     fig=ConfigObj(filename,list_values=False)
+    
     app = QApplication(sys.argv)
-    form = MACRO_EDITOR(config_dict=fig)
-    form.exec_()
-
+    form = MACRO_EDITOR(config_dict=fig,file_name=filename)
+    form.show()
+    sys.exit(app.exec_())

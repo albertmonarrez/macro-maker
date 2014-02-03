@@ -1,4 +1,4 @@
-"""mousemacro.py defines the following functions:
+"""mouse.py defines the following functions:
 
 click() -- calls left mouse click
 hold() -- presses and holds left mouse button

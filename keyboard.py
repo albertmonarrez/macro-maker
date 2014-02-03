@@ -1,4 +1,7 @@
 import collections
+import time
+import win32api
+
 INPUT_KEYBOARD = 1
 KEYEVENTF_EXTENDEDKEY = 1
 KEYEVENTF_KEYUP       = 2
@@ -8,7 +11,7 @@ VK_SHIFT        = 16
 VK_CONTROL      = 17
 VK_MENU         = 18
 
-CODES = collections.OrderedDict([
+codes = collections.OrderedDict([
     ("A", 65),
     ("B", 66),
     ("C", 67),
@@ -34,26 +37,41 @@ CODES = collections.OrderedDict([
     ("W", 87),
     ("X", 88),
     ("Y", 89),
-    ("Z", 90),    
-    ("VK_ACCEPT", 30),
-    ("VK_ADD",    107),
-    ("VK_APPS",    93),
+    ("Z", 90),
+    ("VK_LBUTTON",   1),
+    ("VK_RBUTTON",   2),
+    ("VK_MBUTTON",   4),
+    ("VK_XBUTTON1",  5),
+    ("VK_XBUTTON2",  6),
+    ("VK_NUMPAD0",  96),
+    ("VK_NUMPAD1",  97),
+    ("VK_NUMPAD2",  98),
+    ("VK_NUMPAD3",  99),
+    ("VK_NUMPAD4", 100),
+    ("VK_NUMPAD5", 101),
+    ("VK_NUMPAD6", 102),
+    ("VK_NUMPAD7", 103),
+    ("VK_NUMPAD8", 104),
+    ("VK_NUMPAD9", 105),
+    ("VK_ACCEPT",   30),
+    ("VK_ADD",     107),
+    ("VK_APPS",     93),
     ("VK_ATTN",    246),
-    ("VK_BACK",    8),
-    ("VK_CANCEL",  3),
-    ("VK_CAPITAL", 20),
-    ("VK_CLEAR",   12),
-    ("VK_CONTROL", 17),
-    ("VK_CONVERT", 28),
+    ("VK_BACK",      8),
+    ("VK_CANCEL",    3),
+    ("VK_CAPITAL",  20),
+    ("VK_CLEAR",    12),
+    ("VK_CONTROL",  17),
+    ("VK_CONVERT",  28),
     ("VK_CRSEL",   247),
     ("VK_DECIMAL", 110),
-    ("VK_DELETE",  46),
+    ("VK_DELETE",   46),
     ("VK_DIVIDE",  111),
-    ("VK_DOWN",    40),
-    ("VK_END",     35),
+    ("VK_DOWN",     40),
+    ("VK_END",      35),
     ("VK_EREOF",   249),
-    ("VK_ESCAPE",  27),
-    ("VK_EXECUTE", 43),
+    ("VK_ESCAPE",   27),
+    ("VK_EXECUTE",  43),
     ("VK_EXSEL",   248),
     ("VK_F1",      112),
     ("VK_F2",      113),
@@ -89,13 +107,11 @@ CODES = collections.OrderedDict([
     ("VK_JUNJA",    23),
     ("VK_KANA",     21),
     ("VK_KANJI",    25),
-    ("VK_LBUTTON",   1),
     ("VK_LCONTROL",162),
     ("VK_LEFT",     37),
     ("VK_LMENU",   164),
     ("VK_LSHIFT",  160),
     ("VK_LWIN",     91),
-    ("VK_MBUTTON",    4),
     ("VK_MENU",        18),
     ("VK_MODECHANGE",  31),
     ("VK_MULTIPLY",   106),
@@ -103,16 +119,6 @@ CODES = collections.OrderedDict([
     ("VK_NONAME",     252),
     ("VK_NONCONVERT",  29),
     ("VK_NUMLOCK",    144),
-    ("VK_NUMPAD0",     96),
-    ("VK_NUMPAD1",     97),
-    ("VK_NUMPAD2",     98),
-    ("VK_NUMPAD3",     99),
-    ("VK_NUMPAD4",    100),
-    ("VK_NUMPAD5",    101),
-    ("VK_NUMPAD6",    102),
-    ("VK_NUMPAD7",    103),
-    ("VK_NUMPAD8",    104),
-    ("VK_NUMPAD9",    105),
     ("VK_OEM_CLEAR",  254),
     ("VK_PA1",        253),
     ("VK_PAUSE",       19),
@@ -120,7 +126,6 @@ CODES = collections.OrderedDict([
     ("VK_PRINT",       42),
     ("VK_PRIOR",       33),
     ("VK_PROCESSKEY", 229),
-    ("VK_RBUTTON",      2),
     ("VK_RCONTROL",   163),
     ("VK_RETURN",      13),
     ("VK_RIGHT",       39),
@@ -138,3 +143,22 @@ CODES = collections.OrderedDict([
     ("VK_UP",          38),
     ("ZOOM",          251)])
 
+def keybd_event(virtual_key,delay=.001,key_state='DownUp'):
+    """
+    A simplified version of win32api.keybd_event that's meant to take out some of the hassle of doing keydown keyup so it's less lines in
+    the macro editor and simpler to edit. Simulates a keyboard event (pressing a key on the keyboard)
+    Virual_key is an integer representing the key to be pressed ex. VK_XBUTTON1 =5. Delay is the time to wait after pressing a key down
+    key_state is what you want to do with the key, press it (Down) release it (Up) press and release (DownUp) or do hot keys cntrl+a (Extend)
+    
+    """
+    
+    down=0
+    
+    if 'Down' in key_state:
+        win32api.keybd_event(virtual_key,0,down,0)
+        time.sleep(delay)
+    elif 'Extend' in key_state:
+        win32api.keybd_event(virtual_key,0,KEYEVENTF_EXTENDEDKEY,0)
+        time.sleep(delay)
+    if 'Up' in key_state:
+        win32api.keybd_event(virtual_key,0,KEYEVENTF_KEYUP,0)
