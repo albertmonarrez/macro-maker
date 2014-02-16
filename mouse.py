@@ -21,6 +21,7 @@ from ctypes import*
 from ctypes.wintypes import *
 from time import sleep
 import win32ui
+import time
 
 __all__ = ['click', 'hold', 'release', 'rightclick', 'righthold', 'rightrelease', 'middleclick', 'middlehold', 'middlerelease', 'move', 'slide', 'getpos']
 
@@ -148,8 +149,11 @@ def rightclick():
     windll.user32.mouse_event(RIGHTDOWN,0,0,0,0)
     windll.user32.mouse_event(RIGHTUP,0,0,0,0)
 
-def righthold():
+def righthold(delay=0,release=True):
     windll.user32.mouse_event(RIGHTDOWN,0,0,0,0)
+    if release==True:
+        time.sleep(delay)
+        rightrelease()
 
 def rightrelease():
     windll.user32.mouse_event(RIGHTUP,0,0,0,0)
