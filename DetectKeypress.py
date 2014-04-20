@@ -37,18 +37,18 @@ def get_key_state(*args):
         values.append(return_value)
     return values
 
-def get_triggers(dictionary,eval_num=True):
+def get_triggers(dictionary):
     """
-    Takes a macro dictionary and grabs all the triggers for a macro. Evaluates the trigger(string) returning a number
-    if eval_num is True
+    Takes a macro dictionary and grabs all the triggers for a macro. Evaluates the trigger(string) returning a tupled number(s)
     """
     
     trigger_keys={}
     for macro in dictionary:
-        if eval_num==True:
-            trigger_keys[macro]=eval(dictionary[macro].get('trigger'))
-        else:
-            trigger_keys[macro]=dictionary[macro].get('trigger')
+        keys=[]
+        trigger_key=dictionary[macro].get('trigger').replace(' ','').split(',')
+        for key in trigger_key:
+            keys.append(k.codes.get(key))
+        trigger_keys[macro]=tuple(keys)
         
     return trigger_keys
 

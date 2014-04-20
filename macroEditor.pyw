@@ -18,16 +18,34 @@ class MACRO_EDITOR(QMainWindow):
         self.action='action'+' '*130#lazy hack to resize dialog boxes until I do it properly
         self.macro_dictionary=config_dict
         self.setMinimumSize(550,550)
+        self.count=1
+        
         self.listWidget = QListWidget()
-        self.combobox = QComboBox()
+        self.macrobox = QComboBox()
         self.triggerbox=QComboBox()
         self.triggerbox2=QComboBox()
         self.triggerbox3=QComboBox()
         self.statusBar()
+   
         
-        self.combobox.activated[str].connect(self.on_activated)
-        self.populate_list()
-        self.listWidget.doubleClicked.connect(self.edit)
+        self.tbox_list=[self.triggerbox,self.triggerbox2,self.triggerbox3]
+        
+        #connect activites to functions
+        self.listWidget.doubleClicked.connect(self.edit)        
+        self.macrobox.activated[str].connect(self.on_activated)        
+        for combobox in self.tbox_list:
+            combobox.activated[str].connect(self.update_macro_dictionary)
+        
+        #menubar
+        menu_bar=self.menuBar()
+        
+        f=menu_bar.addMenu('&File')
+        e=menu_bar.addMenu('&Edit')
+        self.menu_item(f,'Save',self.save,tooltip='Saves file to default directory.')
+        self.menu_item(f,'Save As',self.file_dialog,tooltip='Saves file to specified path.')
+        self.menu_item(e,'Add Macro',self.add_new_macro,tooltip='Create a new empty macro')
+        self.menu_item(e,'Duplicate Current Macro',self.duplicate_macro,tooltip='Makes a copy of the current macro')
+        self.menu_item(e,'Delete Current Macro',self.delete_macro,tooltip='Deletes the current macro')
         
         #shorcuts
         save_as=QShortcut(QKeySequence("Ctrl+Shift+S"),self,self.file_dialog)
@@ -37,8 +55,9 @@ class MACRO_EDITOR(QMainWindow):
         up=QShortcut(QKeySequence("Cntrl+Up"),self,self.up)
         down=QShortcut(QKeySequence("Cntrl+Down"),self,self.down)
         
+        #layout
         two_combo=QHBoxLayout()
-        two_combo.addWidget(self.combobox,1)
+        two_combo.addWidget(self.macrobox,1)
         two_combo.addWidget(self.triggerbox)
         two_combo.addWidget(self.triggerbox2)
         two_combo.addWidget(self.triggerbox3)
@@ -53,23 +72,62 @@ class MACRO_EDITOR(QMainWindow):
         self.main_widget.setLayout(self.main_vertical_layout)
         self.setCentralWidget(self.main_widget)
         self.setWindowTitle("%s" % self.name)
+        self.initialize_fields()
         
-    def populate_list(self):
-        self.triggerbox.addItems(k.codes.keys())
-        self.triggerbox2.addItems(k.codes.keys())
+    def menu_item(self,menubar,action_name,method,shortcut=None,tooltip=''):
+        "Easier way to add menu items with function attached"
         
+        action = QAction(action_name, self)
+        if shortcut:
+            action.setShortcut(shortcut)
+        action.setStatusTip(tooltip)
+        action.triggered.connect(method)
+        menubar.addAction(action)
+    
+    def set_triggers(self,current_macro,combobox_list):
+        
+        triggers=[]
+        for combobox in combobox_list:
+            current_text=unicode(combobox.currentText())
+            if current_text!='':
+                triggers.append(current_text)
+                
+        self.macro_dictionary[current_macro]['trigger']=','.join(triggers)
+        
+    def update_macro_dictionary(self):
+        
+        current_macro=unicode(self.macrobox.currentText())
+        self.set_triggers(current_macro, self.tbox_list)
+        self.set_list()
+        
+    def initialize_fields(self):
+        self.populate_combobox_marco(self.macrobox)
+        self.populate_combobox_trigger(self.tbox_list)
+        self.on_activated()
+        
+    def populate_combobox_marco(self,combobox):
+        combobox.clear()
         for macro in self.macro_dictionary:
-            self.combobox.addItem(macro)
-            self.triggerbox.addItem(self.macro_dictionary[macro]['trigger'])
+            combobox.addItem(macro)
 
-        ctext=self.combobox.currentText()
-        if self.macro_dictionary.get(unicode(ctext)):
-            macro_list=self.macro_dictionary.get(unicode(ctext))
-            self.listWidget.addItems(macro_list['actions'].values())
-            self.listWidget.setCurrentRow(0)        
+        macro_name=combobox.currentText()
+        if self.macro_dictionary.get(unicode(macro_name)):
+            macro_list=self.macro_dictionary.get(unicode(macro_name))
+            try:
+                self.listWidget.addItems(macro_list['actions'].values())
+                self.macro_dictionary=genmacro.dictionary_to_list(self.macro_dictionary)                
+            except AttributeError:
+                self.listWidget.addItems(macro_list['actions'])
+                
+            self.listWidget.setCurrentRow(0)
         
-        self.macro_dictionary=genmacro.dictionary_to_list(self.macro_dictionary)
         
+    def populate_combobox_trigger(self,combobox_list):
+        for combobox in combobox_list:
+            combobox.clear()
+            combobox.addItem('')
+            combobox.addItems(k.codes.keys())
+            
     def make_layout(self,layout_items,layoutType='vertical'):
         """Creates the main body of the layout"""
         
@@ -83,7 +141,26 @@ class MACRO_EDITOR(QMainWindow):
             except TypeError:
                 main_layout.addLayout(item)
         return main_layout
-                
+    
+    def add_new_macro(self):
+        pass
+    
+    def duplicate_macro(self):
+        macro=str(self.macrobox.currentText())
+        
+        copy=dict(self.macro_dictionary[macro])
+        self.macro_dictionary[macro+str(self.count)]=copy
+        self.initialize_fields()
+        index=self.macrobox.findText(macro+str(self.count))
+        self.macrobox.setCurrentIndex(index)
+        self.count+=1
+        
+    def delete_macro(self):
+        macro=str(self.macrobox.currentText())
+        if macro:
+            self.macro_dictionary.pop(macro)
+            self.initialize_fields()
+        
     def add_buttons(self):
         
         buttonLayout = QVBoxLayout()
@@ -107,24 +184,34 @@ class MACRO_EDITOR(QMainWindow):
         return buttonLayout  
                 
     def rename_macro(self):
-        macro_name=unicode(self.combobox.currentText())
-        index=self.combobox.currentIndex()
+        macro_name=unicode(self.macrobox.currentText())
+        index=self.macrobox.currentIndex()
         
         title = "Rename Macro"
         string, ok = QInputDialog.getText(self, title, title,
                             QLineEdit.Normal, macro_name)
         if ok and not string.isEmpty():
-            self.combobox.setItemText(index,string)
+            self.macrobox.setItemText(index,string)
             s=unicode(string)
             self.macro_dictionary[s]=self.macro_dictionary.pop(macro_name)
 
     def set_list(self):
         """Grabs the current macro name from the combobox and updates macro_dictionary action list to what's displayed in list widget"""
         
-        current_macro=unicode(self.combobox.currentText())
+        current_macro=unicode(self.macrobox.currentText())
         macro_actions=self.get_current_list()
         self.macro_dictionary[current_macro]['actions']=macro_actions
         
+    def combobox_trigger_display(self,trigger,combobox_list):
+        triggers=trigger.replace(' ','').split(',')
+        
+        for i in range(len(combobox_list)):
+            try:
+                index=combobox_list[i].findText(triggers[i])
+                combobox_list[i].setCurrentIndex(index)
+            except IndexError:#set to index zero: 'None'
+                combobox_list[i].setCurrentIndex(0)
+            
         
     def on_activated(self):
         """
@@ -132,13 +219,14 @@ class MACRO_EDITOR(QMainWindow):
         are displayed to reflect the current macro selection
         """
         
-        current_macro=unicode(self.combobox.currentText())
+        current_macro=unicode(self.macrobox.currentText())
         macro_actions=self.macro_dictionary.get(current_macro)
         self.listWidget.clear()
-        
-        trigger=self.macro_dictionary[current_macro]['trigger']
-        index=self.triggerbox.findText(trigger)
-        self.triggerbox.setCurrentIndex(index)  
+        try:
+            trigger=self.macro_dictionary[current_macro]['trigger']
+            self.combobox_trigger_display(trigger, self.tbox_list)
+        except KeyError:
+            return False
         
         try:
             macro_actions.get('actions').values()
@@ -235,7 +323,7 @@ class MACRO_EDITOR(QMainWindow):
         return items
     
     def save(self,filename=None):
-        if filename==None:filename=self.savepath
+        if not filename:filename=self.savepath
         genmacro.generate_macro(self.macro_dictionary,filename)
         self.statusBar().showMessage('Saved file: %s'%filename,3000)
 

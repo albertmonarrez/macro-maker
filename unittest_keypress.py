@@ -49,10 +49,6 @@ class TEST_KEYPRESS(unittest.TestCase):
         for item in trigs.values():
             self.assertEqual(type(item),int)
             
-        stringTrig=DetectKeypress.get_triggers(macroconfig,eval_num=False)
-        for item in stringTrig.values():
-                    self.assertEqual(type(item),str)       
-        
-        print trigs,stringTrig 
+        print trigs
         
         
