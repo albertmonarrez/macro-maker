@@ -9,7 +9,7 @@ righthold() -- calls right mouse hold
 rightrelease() -- calls right mouse release
 
 middleclick() -- calls middle mouse click
-middlehold() -- calls middle mouse hold
+middleclick() -- calls middle mouse hold
 middlerelease() -- calls middle mouse release
 
 move(x,y) -- moves mouse to x/y coordinates (in pixels)
@@ -20,10 +20,9 @@ slide(x,y) -- slides mouse to x/y coodinates (in pixels)
 from ctypes import*
 from ctypes.wintypes import *
 from time import sleep
-import win32ui
 import time
 
-__all__ = ['click', 'hold', 'release', 'rightclick', 'righthold', 'rightrelease', 'middleclick', 'middlehold', 'middlerelease', 'move', 'slide', 'getpos']
+__all__ = ['click', 'hold', 'release', 'rightclick', 'righthold', 'rightrelease', 'middleclick', 'middleclick', 'middlerelease', 'move', 'slide', 'getpos']
 
 # START SENDINPUT TYPE DECLARATIONS
 PUL = POINTER(c_ulong)
@@ -126,7 +125,7 @@ def slide(a,b,speed=0):
             y += Tspeed
         move(x,y)
 
-
+#uses sendinput to do the clicks
 def click():
     windll.user32.SendInput(2,pointer(x),sizeof(x[0]))
 
@@ -137,29 +136,33 @@ def release():
     windll.user32.SendInput(2, pointer(x3), sizeof(x3[0]))
 
 
-def rightclick():
-    windll.user32.mouse_event(RIGHTDOWN,0,0,0,0)
-    windll.user32.mouse_event(RIGHTUP,0,0,0,0)
-
-def righthold(delay=0,release=True):
-    windll.user32.mouse_event(RIGHTDOWN,0,0,0,0)
+def mousebutton(clickButton,releaseButton,delay=0,release=True):
+    """Simulates a mouse button. Button can be left, right or middle click in up or down state.
+    By default it clicks the button and immediately releases it. If release is false it will skip letting go of the button and
+    hold it."""
+    
+    windll.user32.mouse_event(clickButton,0,0,0,0)
     if release==True:
         time.sleep(delay)
-        rightrelease()
+        windll.user32.mouse_event(releaseButton,0,0,0,0)
+        
+def leftclick(delay=0,release=True):
+    mousebutton(LEFTDOWN,LEFTUP,delay, release)
+
+def leftrelease():    
+    mousebutton(LEFTUP,LEFTUP,release=False)
+
+def rightclick(delay=0,release=True):
+    mousebutton(RIGHTDOWN,RIGHTUP,delay,release)
 
 def rightrelease():
-    windll.user32.mouse_event(RIGHTUP,0,0,0,0)
+    mousebutton(RIGHTUP,RIGHTUP,release=False)
 
-
-def middleclick():
-    windll.user32.mouse_event(MIDDLEDOWN,0,0,0,0)
-    windll.user32.mouse_event(MIDDLEUP,0,0,0,0)
-
-def middlehold():
-    windll.user32.mouse_event(MIDDLEDOWN,0,0,0,0)
+def middleclick(delay=0,release=True):
+    mousebutton(MIDDLEDOWN,MIDDLEUP,release)
 
 def middlerelease():
-    windll.user32.mouse_event(MIDDLEUP,0,0,0,0)
+    mousebutton(MIDDLEUP,MIDDLEUP,release=False)
 
 if __name__ == '__main__':
     move(10,1)
