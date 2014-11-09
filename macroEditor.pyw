@@ -1,3 +1,4 @@
+#!python2.7
 import sys
 import os
 import genmacro
@@ -5,16 +6,17 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from configobj import ConfigObj
 import keyboard as k
+import config
 
 class MACRO_EDITOR(QMainWindow):
 
-    def __init__(self, name='Macro Editor', config_dict={}, parent=None,file_name=None):
+    def __init__(self, name='', config_dict={}, parent=None,file_name=None):
         super(MACRO_EDITOR, self).__init__(parent)
         
         self.main_widget=QWidget(self)#widget for holding my layout
         
         self.savepath=file_name
-        self.name = name
+        self.name = 'Macro Editor: '+self.savepath
         self.action='action'+' '*130#lazy hack to resize dialog boxes until I do it properly
         self.macro_dictionary=config_dict
         self.setMinimumSize(550,550)
@@ -43,6 +45,7 @@ class MACRO_EDITOR(QMainWindow):
         e=menu_bar.addMenu('&Edit')
         self.menu_item(f,'Save',self.save,tooltip='Saves file to default directory.')
         self.menu_item(f,'Save As',self.file_dialog,tooltip='Saves file to specified path.')
+        self.menu_item(f,'Load',self.load,tooltip='Loads a macro file.')
         self.menu_item(e,'Add Macro',self.add_new_macro,tooltip='Create a new empty macro')
         self.menu_item(e,'Duplicate Current Macro',self.duplicate_macro,tooltip='Makes a copy of the current macro')
         self.menu_item(e,'Delete Current Macro',self.delete_macro,tooltip='Deletes the current macro')
@@ -83,6 +86,14 @@ class MACRO_EDITOR(QMainWindow):
         action.setStatusTip(tooltip)
         action.triggered.connect(method)
         menubar.addAction(action)
+        
+    def load(self):
+        fileName =QFileDialog.getOpenFileName(parent=self,caption='Choose file to load',directory=self.savepath,filter='cfg files (*.cfg)')
+        if fileName:
+            fig=ConfigObj(unicode(fileName),list_values=False)
+            self.macro_dictionary=fig
+            self.savepath=fileName
+            self.initialize_fields()
     
     def set_triggers(self,current_macro,combobox_list):
         
@@ -101,6 +112,7 @@ class MACRO_EDITOR(QMainWindow):
         self.set_list()
         
     def initialize_fields(self):
+        self.setWindowTitle("%s" % "Macro Editor: "+self.savepath)
         self.populate_combobox_marco(self.macrobox)
         self.populate_combobox_trigger(self.tbox_list)
         self.on_activated()
@@ -326,6 +338,9 @@ class MACRO_EDITOR(QMainWindow):
         if not filename:filename=self.savepath
         genmacro.generate_macro(self.macro_dictionary,filename)
         self.statusBar().showMessage('Saved file: %s'%filename,3000)
+        
+        self.setWindowTitle("%s" % "Macro Editor: "+self.savepath)
+        
 
     def file_dialog(self):
         """
@@ -336,10 +351,11 @@ class MACRO_EDITOR(QMainWindow):
         if fileName:
             self.savepath=fileName            
             self.save(fileName)
+            
         
 
 if __name__ == "__main__":
-    filename="macroconfig.cfg"
+    filename=config.DEFAULT_PROFILE
     fig=ConfigObj(filename,list_values=False)
     
     app = QApplication(sys.argv)

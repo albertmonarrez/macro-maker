@@ -1,29 +1,33 @@
+#!python2
 import os
 import time
 import subprocess
 import DetectKeypress
 import win32api
+from multiprocessing import Process
 import WinController.EnumerateWindows as EnumerateWindows
+import datetime
 
-def SvcDoRun():
-    KeyPressInstance=False
-    
+def find_game_instance():
+    """Checks to see if DCUO is running if it is it starts the keypress detector."""
+        
     while True:
         DCwindow=EnumerateWindows.get_windows_with_text('DC Universe Online [S')
         DCwindow2=EnumerateWindows.get_windows_with_text('DC Universe Online [T')
         if len(DCwindow)>0 or len(DCwindow2)>0:
             print 'Found Running instance of DC Universe Online. %s' %DCwindow
-            keypresswindow=EnumerateWindows.get_windows_with_text("C:\Windows\system32\cmd.exe")
-            if not keypresswindow:
-                try:
-                    print'Turning on Keypress detection'
-                    os.system("start /wait cmd /c C:/Python27/python.exe C:/pythonCustomCode/PythonWinService/DetectKeypress.py")
-                except Exception,e:
-                    print e
+            p=Process(target=DetectKeypress.main,name='Keypresser')
+            try:
+                print'Turning on Keypress detection'
+                p.start()
+                p.join()#execution stops here and waits until this job is done before the loop continues.
+                print 'After join',datetime.datetime.now()#testing to check the above is true
+            except Exception as e:
+                print e
                     
-        time.sleep(5)
+        time.sleep(2)
     print 'Service stopped'
         
 if __name__ == '__main__':
-    SvcDoRun()
+    find_game_instance()
 

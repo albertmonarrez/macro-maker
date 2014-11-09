@@ -47,7 +47,7 @@ class TEST_KEYPRESS(unittest.TestCase):
         macroconfig=config=ConfigObj("macroconfig.cfg",list_values=False)
         trigs=DetectKeypress.get_triggers(macroconfig)
         for item in trigs.values():
-            self.assertEqual(type(item),int)
+            self.assertEqual(type(item),tuple)
             
         print trigs
         

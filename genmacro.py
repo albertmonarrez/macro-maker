@@ -1,3 +1,4 @@
+#!python2.7
 import time
 from itertools import *
 from configobj import ConfigObj

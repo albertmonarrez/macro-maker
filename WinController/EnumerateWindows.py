@@ -71,13 +71,13 @@ def get_excel_stats():
     numberOfWorkbooks=xl.Workbooks.Count
     workbooks=xl.Workbooks
     
-    print xl,"Number of Workbooks:",numberOfWorkbooks
+    print(xl,"Number of Workbooks:",numberOfWorkbooks)
     for item in workbooks:
-        print 'File name:',item.Name
+        print('File name:',item.Name)
         xlbook=item
         for sheet in xlbook.Sheets:
-            print 'Sheet name:',sheet.Name
-        print '\n'
+            print('Sheet name:',sheet.Name)
+        print('\n')
 def get_window_by_name(windowTitle):
     x=win32ui.FindWindow(None,windowTitle)
     y=win32gui.FindWindow(None,windowTitle)
@@ -105,10 +105,6 @@ def get_window_names():
     for item in all_windows:
         windowtext=win32gui.GetWindowText(item)
         if windowtext !='':#Don't print out empty strings
-            print windowtext,'Class:',win32gui.GetClassName(item)
+            print(windowtext,'Class:',win32gui.GetClassName(item))
 
-
-
-#if __name__=='__main__':
-    #windows=get_window_names()
     
